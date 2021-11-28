@@ -1,12 +1,8 @@
 from typing import List
 import requests
 import re
-import sys
-import threading
 from requests.models import HTTPError
-from .listeners import ProgressListener
-
-from .progress_handler import ProgressHandler
+from .listeners import ProgressListener, RealVideoNameFoundListener
 
 
 def find_nth(string, seq, n):
@@ -48,13 +44,16 @@ class Downloader:
 
     def __init__(self, youtube_api_key):
         self.progress_listeners: List[ProgressListener] = []
+        self.real_video_name_found_listeners: List[RealVideoNameFoundListener] = [
+        ]
         self.api_key = youtube_api_key
 
-    def download(self, url, filesize):
+    def download(self, url, video_name, filesize):
         """Downloads and writes the file from url.
 
         Args:
             url (str): url of the file.
+            video_name (str): name of the video user typed in, used for listener.
             filesize (int): filesize in MBs, used for progress calculation.
         """
 
@@ -63,6 +62,9 @@ class Downloader:
         last_percentage = 0
         filename = find_str_between(res.headers["Content-Disposition"], "\"")
         print(f"Download of {filename} started.")
+
+        self.notify_real_video_name_found_listener(video_name, filename)
+
         with open(f"{filename}", "wb") as f:
             for chunk in res.iter_content(1000*1000):
                 if chunk:
@@ -149,7 +151,7 @@ class Downloader:
         if not url:
             print(f"Could not extract a download url from {video_name}")
             return
-        self.download(url, float(mbs[0])*1.046)
+        self.download(url, video_name, float(mbs[0])*1.046)
 
     def attach_progress_listener(self, progress_listener: ProgressListener):
         self.progress_listeners.append(progress_listener)
@@ -157,3 +159,10 @@ class Downloader:
     def notify_progress_listeners(self, name, value):
         for progress_listener in self.progress_listeners:
             progress_listener.on_progress_change(name, value)
+
+    def attach_real_video_name_found_listener(self, l: RealVideoNameFoundListener):
+        self.real_video_name_found_listeners.append(l)
+
+    def notify_real_video_name_found_listener(self, user_typed_name, real_name):
+        for l in self.real_video_name_found_listeners:
+            l.on_real_video_name_found(user_typed_name, real_name)

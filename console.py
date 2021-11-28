@@ -4,9 +4,7 @@ import threading
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
-from requests.models import HTTPError
 from api.downloader import Downloader
-from api.listeners import ProgressListener
 
 from api.progress_handler import ProgressHandler
 
