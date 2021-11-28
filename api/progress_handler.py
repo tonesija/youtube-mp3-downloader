@@ -1,3 +1,6 @@
+from api.listeners import ProgressListener
+
+
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
     """
     Call in a loop to create terminal progress bar
@@ -22,15 +25,16 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print()
 
 
-class ProgressHandler:
+class ProgressHandler(ProgressListener):
     """Handles progresses of tasks, prints the loading bar on the console."""
 
-    def __init__(self, skip=10):
+    def __init__(self):
         self.progresses = {}
-        self.skip = skip
-        self.counter = 0
 
         self.finished = False
+
+    def on_progress_change(self, name, value):
+        self.update_progress(name, value)
 
     def update_progress(self, name, value):
         """Update the progress of a task. Triggers the console load printing.
@@ -43,12 +47,14 @@ class ProgressHandler:
         if value == 100 and self.progresses[name] != 100:
             print(f"{name[0:40]} has finished downloading.")
             self.finished = True
+            for key, progress in self.progresses.items():
+                if key != name and progress != 100:
+                    self.finished = False
+                    break
 
         self.progresses[name] = value
 
-        if not self.finished and self.counter % self.skip != 0:
-            self.print_progress()
-        self.counter += 1
+        self.print_progress()
 
     def print_progress(self):
         """Print the progress in the console."""
