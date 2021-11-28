@@ -1,7 +1,7 @@
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
     """
     Call in a loop to create terminal progress bar
-    @params:
+    Args:
         iteration   - Required  : current iteration (Int)
         total       - Required  : total iterations (Int)
         prefix      - Optional  : prefix string (Str)
@@ -11,6 +11,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         fill        - Optional  : bar fill character (Str)
         printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
     """
+
     percent = ("{0:." + str(decimals) + "f}").format(100 *
                                                      (iteration / float(total)))
     filledLength = int(length * iteration // total)
@@ -22,6 +23,8 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 
 
 class ProgressHandler:
+    """Handles progresses of tasks, prints the loading bar on the console."""
+
     def __init__(self, skip=10):
         self.progresses = {}
         self.skip = skip
@@ -30,8 +33,16 @@ class ProgressHandler:
         self.finished = False
 
     def update_progress(self, name, value):
+        """Update the progress of a task. Triggers the console load printing.
+
+        Args:
+            name (str): name of the task. 
+            value (int): progress's value, [0, 100].
+        """
+
         if value == 100 and self.progresses[name] != 100:
             print(f"{name[0:40]} has finished downloading.")
+            self.finished = True
 
         self.progresses[name] = value
 
@@ -40,8 +51,10 @@ class ProgressHandler:
         self.counter += 1
 
     def print_progress(self):
+        """Print the progress in the console."""
+
         percentage = 0
-        for name, progress in self.progresses.items():
+        for progress in self.progresses.values():
             percentage += progress
 
         percentage = percentage / len(self.progresses)
